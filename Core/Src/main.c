@@ -59,7 +59,7 @@ static int ADC_value;
 
 static enum { IDLE, SEND, RE_SEND, WAIT } communication_state = IDLE;
 
-static enum { READY, START, R, RS, RST, O, OK } command_state = READY;
+static enum { EMPTY, START, R, RS, RST, O, OK } command_state = EMPTY;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -120,7 +120,7 @@ void command_parser_fsm(void)
     //! OK#
     switch (command_state)
     {
-        case READY:
+        case EMPTY:
             if (receive_char == '!')
             {
                 command_state = START;
@@ -138,7 +138,7 @@ void command_parser_fsm(void)
             }
             else
             {
-                command_state = READY;
+                command_state = EMPTY;
             }
             break;
         case R:
@@ -148,7 +148,7 @@ void command_parser_fsm(void)
             }
             else
             {
-                command_state = READY;
+                command_state = EMPTY;
             }
             break;
         case RS:
@@ -158,7 +158,7 @@ void command_parser_fsm(void)
             }
             else
             {
-                command_state = READY;
+                command_state = EMPTY;
             }
             break;
         case RST:
@@ -166,7 +166,7 @@ void command_parser_fsm(void)
             {
                 communication_state = SEND;
             }
-            command_state = READY;
+            command_state = EMPTY;
             break;
         case O:
             if (receive_char == 'K')
@@ -175,7 +175,7 @@ void command_parser_fsm(void)
             }
             else
             {
-                command_state = READY;
+                command_state = EMPTY;
             }
             break;
         case OK:
@@ -183,7 +183,7 @@ void command_parser_fsm(void)
             {
                 communication_state = IDLE;
             }
-            command_state = READY;
+            command_state = EMPTY;
             break;
     }
 }
