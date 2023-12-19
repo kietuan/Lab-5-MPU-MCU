@@ -57,7 +57,9 @@ static uint8_t receive_char = 0;
 static uint8_t str[50];
 static int ADC_value;
 
-static enum { IDLE, SEND, RE_SEND, WAIT } communication_state = IDLE;
+static enum { IDLE, SEND, WAIT } communication_state = IDLE;
+
+static enum { NOTHING, START_SEND, DONE } communication_flag = NOTHING;
 
 static enum { EMPTY, START, R, RS, RST, O, OK } command_state = EMPTY;
 /* USER CODE END PV */
@@ -125,7 +127,7 @@ void command_parser_fsm(void)
             {
                 command_state = START;
             }
-    
+
             break;
         case START:
             if (receive_char == 'R')
@@ -164,7 +166,7 @@ void command_parser_fsm(void)
         case RST:
             if (receive_char == '#')
             {
-                communication_state = SEND;
+                communication_flag = START_SEND;
             }
             command_state = EMPTY;
             break;
@@ -181,7 +183,7 @@ void command_parser_fsm(void)
         case OK:
             if (receive_char == '#')
             {
-                communication_state = IDLE;
+                communication_flag = DONE;
             }
             command_state = EMPTY;
             break;
@@ -193,22 +195,47 @@ void uart_communication_fsm(void)
     switch (communication_state)
     {
         case IDLE:
-            /* do nothing */
+            if (communication_flag == START_SEND)
+                communication_state = SEND;
+            communication_flag = NOTHING;
             break;
         case SEND:
             ADC_value = HAL_ADC_GetValue(&hadc1);
             HAL_UART_Transmit(&huart2, str, sprintf(str, "!ADC = %d#", ADC_value), 1000);
-            setTimer1(3000);
-            communication_state = WAIT;
+
+            if (communication_flag == START_SEND)
+            {
+                communication_state = SEND;
+            }
+            else if (communication_flag == DONE)
+            {
+                communication_state = IDLE;
+            }
+            else
+            {
+                setTimer1(3000);
+                communication_state = WAIT;
+            }
+            communication_flag = NOTHING;
             break;
         case WAIT:
-            if (timer1_flag == 1)
-                communication_state = RE_SEND;
-            break;
-        case RE_SEND:
-            HAL_UART_Transmit(&huart2, str, sprintf(str, "!ADC = %d#", ADC_value), 1000);
-            setTimer1(3000);
-            communication_state = WAIT;
+            if (communication_flag == START_SEND)
+            {
+                communication_state = SEND;
+            }
+            else if (communication_flag == DONE)
+            {
+                communication_state = IDLE;
+            }
+            else // if (communication_flag == NOTHING)
+            {
+                if (timer1_flag == 1)
+                {
+                    setTimer1(3000);
+                    HAL_UART_Transmit(&huart2, str, sprintf(str, "!ADC = %d#", ADC_value), 1000);
+                }
+            }
+            communication_flag = NOTHING;
             break;
         default:
             break;

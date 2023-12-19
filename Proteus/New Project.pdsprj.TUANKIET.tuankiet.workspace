@@ -666,7 +666,7 @@
      <ITEM name="TopLineAddress">40022000</ITEM>
     </PROPERTIES>
    </POPUP>
-   <POPUP w="450" x="1128" flags="00008023" y="573" h="250" pid="0" iid="2">
+   <POPUP w="450" x="1102" flags="00008023" y="573" h="250" pid="0" iid="2">
     <PROPERTIES>
      <ITEM name="AutoEcho">0</ITEM>
      <ITEM name="HexMode">0</ITEM>
